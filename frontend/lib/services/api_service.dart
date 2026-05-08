@@ -90,7 +90,6 @@ class ApiService {
           "amount": amount,
           "category": category,
           "date": date,
-          "description": title,
         }),
       );
 

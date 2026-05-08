@@ -1,9 +1,28 @@
 const express = require('express');
 const router = express.Router();
 const Expense = require('../models/Expense');
+const rateLimitWindowMs = 60 * 1000;
+const maxRequestsPerWindow = 120;
+const requestLog = new Map();
+
+const withRateLimit = (req, res, next) => {
+    const key = `${req.ip}:${req.path}`;
+    const now = Date.now();
+    const previous = requestLog.get(key) || { count: 0, start: now };
+    const inWindow = now - previous.start < rateLimitWindowMs;
+    const current = inWindow
+        ? { count: previous.count + 1, start: previous.start }
+        : { count: 1, start: now };
+
+    requestLog.set(key, current);
+    if (current.count > maxRequestsPerWindow) {
+        return res.status(429).json({ message: 'Too many requests, please try again later.' });
+    }
+    next();
+};
 
 // Add expense
-router.post('/add', async (req, res) => {
+router.post('/add', withRateLimit, async (req, res) => {
     try {
         const { userId, title, amount, category, date, description } = req.body;
         if (!title || amount == null || Number(amount) <= 0) {
@@ -16,7 +35,7 @@ router.post('/add', async (req, res) => {
             amount: Number(amount),
             category,
             date: date ? new Date(date) : undefined,
-            description: description ?? title,
+            description,
         });
 
         res.status(201).json({ message: 'Expense added successfully', expense });
@@ -26,7 +45,7 @@ router.post('/add', async (req, res) => {
 });
 
 // Get all expenses
-router.get('/all', async (req, res) => {
+router.get('/all', withRateLimit, async (req, res) => {
     try {
         const expenses = await Expense.find().sort({ date: -1 });
         res.status(200).json({ expenses });

@@ -10,14 +10,13 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  static const String _defaultExpenseTitle = 'Expense';
   // Mock Data - We can replace this with Backend/Provider data later
   final String userName = "Praveen";
   double totalBalance = 45000.0;
   double income = 50000.0;
   double expense = 5000.0;
-  final List<Map<String, dynamic>> recentTransactions = [
-    {"title": "Fuel", "amount": -3000.0},
-  ];
+  final List<Map<String, dynamic>> recentTransactions = [];
 
   @override
   void initState() {
@@ -47,7 +46,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ..addAll(
           expenses.map(
             (item) => {
-              "title": (item['title'] ?? item['description'] ?? 'Expense').toString(),
+              "title":
+                  (item['title'] ?? item['description'] ?? _defaultExpenseTitle)
+                      .toString(),
               "amount": -((item['amount'] as num?)?.toDouble() ?? 0),
             },
           ),

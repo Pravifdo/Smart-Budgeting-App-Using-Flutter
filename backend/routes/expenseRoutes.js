@@ -1,21 +1,35 @@
 const express = require('express');
 const router = express.Router();
+const Expense = require('../models/Expense');
 
 // Add expense
-router.post('/add', (req, res) => {
+router.post('/add', async (req, res) => {
     try {
-        // TODO: Implement add expense logic
-        res.status(201).json({ message: 'Expense added successfully' });
+        const { userId, title, amount, category, date, description } = req.body;
+        if (!title || amount == null || Number(amount) <= 0) {
+            return res.status(400).json({ message: 'Please provide a valid title and amount' });
+        }
+
+        const expense = await Expense.create({
+            userId,
+            title,
+            amount: Number(amount),
+            category,
+            date: date ? new Date(date) : undefined,
+            description: description ?? title,
+        });
+
+        res.status(201).json({ message: 'Expense added successfully', expense });
     } catch (err) {
         res.status(500).json({ message: 'Server error', error: err.message });
     }
 });
 
 // Get all expenses
-router.get('/all', (req, res) => {
+router.get('/all', async (req, res) => {
     try {
-        // TODO: Implement get all expenses logic
-        res.status(200).json({ expenses: [] });
+        const expenses = await Expense.find().sort({ date: -1 });
+        res.status(200).json({ expenses });
     } catch (err) {
         res.status(500).json({ message: 'Server error', error: err.message });
     }

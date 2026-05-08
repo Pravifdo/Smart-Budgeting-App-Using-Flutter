@@ -1,25 +1,14 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const Expense = require('../models/Expense');
-const rateLimitWindowMs = 60 * 1000;
-const maxRequestsPerWindow = 120;
-const requestLog = new Map();
-
-const withRateLimit = (req, res, next) => {
-    const key = `${req.ip}:${req.path}`;
-    const now = Date.now();
-    const previous = requestLog.get(key) || { count: 0, start: now };
-    const inWindow = now - previous.start < rateLimitWindowMs;
-    const current = inWindow
-        ? { count: previous.count + 1, start: previous.start }
-        : { count: 1, start: now };
-
-    requestLog.set(key, current);
-    if (current.count > maxRequestsPerWindow) {
-        return res.status(429).json({ message: 'Too many requests, please try again later.' });
-    }
-    next();
-};
+const withRateLimit = rateLimit({
+    windowMs: 60 * 1000,
+    max: 120,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: 'Too many requests, please try again later.' },
+});
 
 // Add expense
 router.post('/add', withRateLimit, async (req, res) => {
@@ -55,7 +44,7 @@ router.get('/all', withRateLimit, async (req, res) => {
 });
 
 // Get expense by ID
-router.get('/:id', (req, res) => {
+router.get('/:id', withRateLimit, (req, res) => {
     try {
         // TODO: Implement get expense by ID logic
         res.status(200).json({ message: 'Expense found' });
@@ -65,7 +54,7 @@ router.get('/:id', (req, res) => {
 });
 
 // Update expense
-router.put('/:id', (req, res) => {
+router.put('/:id', withRateLimit, (req, res) => {
     try {
         // TODO: Implement update expense logic
         res.status(200).json({ message: 'Expense updated successfully' });
@@ -75,7 +64,7 @@ router.put('/:id', (req, res) => {
 });
 
 // Delete expense
-router.delete('/:id', (req, res) => {
+router.delete('/:id', withRateLimit, (req, res) => {
     try {
         // TODO: Implement delete expense logic
         res.status(200).json({ message: 'Expense deleted successfully' });

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'add_expense_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -10,12 +11,9 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   // Mock Data - We can replace this with Backend/Provider data later
   final String userName = "Praveen";
-  final double totalBalance = 45000.0;
-  final double income = 50000.0;
-  final double expense = 5000.0;
-
-  final List<Map<String, dynamic>> recentTransactions = [
-    {"title": "Food", "amount": -2000.0},
+  double totalBalance = 45000.0;
+  double income = 50000.0;
+  double expense = 5000.0;
     {"title": "Fuel", "amount": -3000.0},
   ];
 
@@ -158,9 +156,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(20.0),
         child: ElevatedButton(
-          onPressed: () {
-            // TODO: Route to Add Expense screen
-            // Navigator.pushNamed(context, '/add-expense');
+          onPressed: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const AddExpenseScreen()),
+            );
+
+            if (result != null && result is Map<String, dynamic>) {
+              setState(() {
+                // Update lists and totals
+                recentTransactions.insert(0, {
+                  "title": result['title'],
+                  "amount": -result['amount'],
+                });
+                expense += result['amount'];
+                totalBalance -= result['amount'];
+              });
+            }
           },
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),

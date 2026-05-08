@@ -14,16 +14,21 @@ const withRateLimit = rateLimit({
 router.post('/add', withRateLimit, async (req, res) => {
     try {
         const { userId, title, amount, category, date, description } = req.body;
-        if (!title || amount == null || Number(amount) <= 0) {
+        const normalizedAmount = Number(amount);
+        if (!title || !Number.isFinite(normalizedAmount) || normalizedAmount <= 0) {
             return res.status(400).json({ message: 'Please provide a valid title and amount' });
+        }
+        const parsedDate = date ? new Date(date) : undefined;
+        if (date && Number.isNaN(parsedDate.getTime())) {
+            return res.status(400).json({ message: 'Please provide a valid date' });
         }
 
         const expense = await Expense.create({
             userId,
             title,
-            amount: Number(amount),
+            amount: normalizedAmount,
             category,
-            date: date ? new Date(date) : undefined,
+            date: parsedDate,
             description,
         });
 

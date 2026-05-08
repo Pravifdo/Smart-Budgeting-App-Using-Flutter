@@ -30,10 +30,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     final data = response['data'];
     if (data is! Map<String, dynamic>) return;
-    final expenses =
-        ((data['expenses'] as List<dynamic>? ?? []).whereType<Map>())
-            .map((item) => item.map((key, value) => MapEntry('$key', value)))
-            .toList();
+    final expenses = (data['expenses'] as List<dynamic>? ?? [])
+        .whereType<Map<String, dynamic>>()
+        .toList();
 
     final totalExpense = expenses.fold<double>(
       0,
@@ -46,9 +45,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ..addAll(
           expenses.map(
             (item) => {
-              "title":
-                  (item['title'] ?? item['description'] ?? _defaultExpenseTitle)
-                      .toString(),
+              "title": (item['title'] ?? _defaultExpenseTitle).toString(),
               "amount": -((item['amount'] as num?)?.toDouble() ?? 0),
             },
           ),

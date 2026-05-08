@@ -25,34 +25,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _loadExpenses() async {
-    final response = await ApiService.getExpenses();
-    if (!mounted || response['success'] != true) return;
+    try {
+      final response = await ApiService.getExpenses();
+      if (!mounted || response['success'] != true) return;
 
-    final data = response['data'];
-    if (data is! Map<String, dynamic>) return;
-    final expenses = (data['expenses'] as List<dynamic>? ?? [])
-        .whereType<Map<String, dynamic>>()
-        .toList();
+      final data = response['data'];
+      if (data is! Map<String, dynamic>) return;
+      final expenses = (data['expenses'] as List<dynamic>? ?? [])
+          .whereType<Map<String, dynamic>>()
+          .toList();
 
-    final totalExpense = expenses.fold<double>(
-      0,
-      (sum, item) => sum + ((item['amount'] as num?)?.toDouble() ?? 0),
-    );
+      final totalExpense = expenses.fold<double>(
+        0,
+        (sum, item) => sum + ((item['amount'] as num?)?.toDouble() ?? 0),
+      );
 
-    setState(() {
-      recentTransactions
-        ..clear()
-        ..addAll(
-          expenses.map(
-            (item) => {
-              "title": (item['title'] ?? _defaultExpenseTitle).toString(),
-              "amount": -((item['amount'] as num?)?.toDouble() ?? 0),
-            },
-          ),
-        );
-      expense = totalExpense;
-      totalBalance = income - totalExpense;
-    });
+      setState(() {
+        recentTransactions
+          ..clear()
+          ..addAll(
+            expenses.map(
+              (item) => {
+                "title": (item['title'] ?? _defaultExpenseTitle).toString(),
+                "amount": -((item['amount'] as num?)?.toDouble() ?? 0),
+              },
+            ),
+          );
+        expense = totalExpense;
+        totalBalance = income - totalExpense;
+      });
+    } catch (e) {
+      debugPrint('Failed to load expenses: $e');
+    }
   }
 
   @override

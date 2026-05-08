@@ -28,18 +28,25 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       _isSaving = true;
     });
 
-    final result = await ApiService.addExpense(
-      title: title,
-      amount: amount,
-      category: 'General',
-      date: DateTime.now().toIso8601String(),
-    );
+    Map<String, dynamic> result;
+    try {
+      result = await ApiService.addExpense(
+        title: title,
+        amount: amount,
+        category: 'General',
+        date: DateTime.now().toIso8601String(),
+      );
+    } catch (e) {
+      result = {'success': false, 'message': 'Error: $e'};
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
 
     if (!mounted) return;
-
-    setState(() {
-      _isSaving = false;
-    });
 
     if (result['success'] == true) {
       ScaffoldMessenger.of(context).showSnackBar(

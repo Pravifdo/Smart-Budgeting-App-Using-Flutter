@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'add_expense_screen.dart';
+import '../services/api_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -9,13 +10,54 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  static const String _defaultExpenseTitle = 'Expense';
   // Mock Data - We can replace this with Backend/Provider data later
   final String userName = "Praveen";
   double totalBalance = 45000.0;
   double income = 50000.0;
   double expense = 5000.0;
-    {"title": "Fuel", "amount": -3000.0},
-  ];
+  final List<Map<String, dynamic>> recentTransactions = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadExpenses();
+  }
+
+  Future<void> _loadExpenses() async {
+    try {
+      final response = await ApiService.getExpenses();
+      if (!mounted || response['success'] != true) return;
+
+      final data = response['data'];
+      if (data is! Map<String, dynamic>) return;
+      final expenses = (data['expenses'] as List<dynamic>? ?? [])
+          .whereType<Map<String, dynamic>>()
+          .toList();
+
+      final totalExpense = expenses.fold<double>(
+        0,
+        (sum, item) => sum + ((item['amount'] as num?)?.toDouble() ?? 0),
+      );
+
+      setState(() {
+        recentTransactions
+          ..clear()
+          ..addAll(
+            expenses.map(
+              (item) => {
+                "title": (item['title'] ?? _defaultExpenseTitle).toString(),
+                "amount": -((item['amount'] as num?)?.toDouble() ?? 0),
+              },
+            ),
+          );
+        expense = totalExpense;
+        totalBalance = income - totalExpense;
+      });
+    } catch (e) {
+      debugPrint('Failed to load expenses: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -136,7 +178,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                         trailing: Text(
-                          "${tx["amount"]} Rs",
+                          "${(tx["amount"] as num).toStringAsFixed(0)} Rs",
                           style: const TextStyle(
                             color: Colors.redAccent,
                             fontWeight: FontWeight.bold,
@@ -163,14 +205,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
             );
 
             if (result != null && result is Map<String, dynamic>) {
+              final addedAmount = (result['amount'] as num).toDouble();
               setState(() {
                 // Update lists and totals
                 recentTransactions.insert(0, {
                   "title": result['title'],
-                  "amount": -result['amount'],
+                  "amount": -addedAmount,
                 });
-                expense += result['amount'];
-                totalBalance -= result['amount'];
+                expense += addedAmount;
+                totalBalance -= addedAmount;
               });
             }
           },

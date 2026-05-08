@@ -76,19 +76,20 @@ class ApiService {
 
   // Add expense
   static Future<Map<String, dynamic>> addExpense({
-    required String token,
+    String? token,
     required String title,
     required double amount,
     required String category,
     required String date,
   }) async {
     try {
+      final headers = <String, String>{"Content-Type": "application/json"};
+      if (token != null && token.isNotEmpty) {
+        headers["Authorization"] = "Bearer $token";
+      }
       final response = await http.post(
         Uri.parse("$baseUrl/expenses/add"),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
+        headers: headers,
         body: jsonEncode({
           "title": title,
           "amount": amount,
@@ -116,16 +117,15 @@ class ApiService {
   }
 
   // Get all expenses
-  static Future<Map<String, dynamic>> getExpenses({
-    required String token,
-  }) async {
+  static Future<Map<String, dynamic>> getExpenses({String? token}) async {
     try {
+      final headers = <String, String>{"Content-Type": "application/json"};
+      if (token != null && token.isNotEmpty) {
+        headers["Authorization"] = "Bearer $token";
+      }
       final response = await http.get(
         Uri.parse("$baseUrl/expenses/all"),
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
+        headers: headers,
       );
 
       if (response.statusCode == 200) {

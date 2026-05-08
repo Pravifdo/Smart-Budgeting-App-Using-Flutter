@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   const AddExpenseScreen({super.key});
@@ -10,6 +11,55 @@ class AddExpenseScreen extends StatefulWidget {
 class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _amountController = TextEditingController();
   final _titleController = TextEditingController();
+  bool _isSaving = false;
+
+  Future<void> _saveExpense() async {
+    final title = _titleController.text.trim();
+    final amount = double.tryParse(_amountController.text.trim());
+
+    if (title.isEmpty || amount == null || amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a valid title and amount')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    Map<String, dynamic> result;
+    try {
+      result = await ApiService.addExpense(
+        title: title,
+        amount: amount,
+        category: 'General',
+        date: DateTime.now().toIso8601String(),
+      );
+    } catch (e) {
+      result = {'success': false, 'message': 'Error: $e'};
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
+
+    if (!mounted) return;
+
+    if (result['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Expense Added Successfully!')),
+      );
+      Navigator.pop(context, {'title': title, 'amount': amount});
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(result['message'] ?? 'Failed to save expense')),
+    );
+  }
 
   @override
   void dispose() {
@@ -47,21 +97,24 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             ),
             const SizedBox(height: 30),
             ElevatedButton(
-              onPressed: () {
-                // TODO: Save the expense to the backend or provider
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Expense Added Successfully!')),
-                );
-                Navigator.pop(context); // Go back to dashboard
-              },
+              onPressed: _isSaving ? null : _saveExpense,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 backgroundColor: Colors.blueAccent,
               ),
-              child: const Text(
-                "Save Expense",
-                style: TextStyle(fontSize: 18, color: Colors.white),
-              ),
+              child: _isSaving
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Text(
+                      "Save Expense",
+                      style: TextStyle(fontSize: 18, color: Colors.white),
+                    ),
             ),
           ],
         ),

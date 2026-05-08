@@ -14,6 +14,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   double totalBalance = 45000.0;
   double income = 50000.0;
   double expense = 5000.0;
+  List<Map<String, dynamic>> recentTransactions = [
     {"title": "Fuel", "amount": -3000.0},
   ];
 

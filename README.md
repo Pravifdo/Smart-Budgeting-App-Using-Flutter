@@ -90,7 +90,9 @@ fanashita_app/
 
 ## 📸 Screenshots
 
-*(Add screenshots here to showcase the beautiful UI)*
+<img width="430" height="793" alt="image" src="https://github.com/user-attachments/assets/d7c0295f-c6c8-4701-99b4-d23ba2b2f983" />
+
+
 
 ## 📄 License
 This project is for educational purposes.

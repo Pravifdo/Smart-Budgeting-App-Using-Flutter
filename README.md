@@ -88,14 +88,13 @@ fanashita_app/
    flutter run
    ```
 
-## 📸 Screenshots
-🔑 Login Screen
-<img width="434" height="794" alt="Login" src="https://github.com/user-attachments/assets/3fd87913-43be-4373-be7e-2e9c3242d20d" />
-📊 Dashboard Screen
-<img width="428" height="797" alt="Dashboard" src="https://github.com/user-attachments/assets/8c330d3e-aaae-4db4-9f77-abda4c6efd53" />
-👤 Profile Screen
-<img width="430" height="793" alt="Profile" src="https://github.com/user-attachments/assets/d7c0295f-c6c8-4701-99b4-d23ba2b2f983" />
+# 📸 Application Preview
 
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/3fd87913-43be-4373-be7e-2e9c3242d20d" width="300"/>
+  <img src="https://github.com/user-attachments/assets/8c330d3e-aaae-4db4-9f77-abda4c6efd53" width="300"/>
+  <img src="https://github.com/user-attachments/assets/d7c0295f-c6c8-4701-99b4-d23ba2b2f983" width="300"/>
+</p>
 
 
 

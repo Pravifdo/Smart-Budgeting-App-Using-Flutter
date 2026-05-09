@@ -13,6 +13,18 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true
+    },
+    job: {
+        type: String,
+        default: "Software Engineer"
+    },
+    location: {
+        type: String,
+        default: "Sri Lanka"
+    },
+    profileImage: {
+        type: String,
+        default: ""
     }
 });
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'add_expense_screen.dart';
 import 'add_income_screen.dart';
+import 'profile_screen.dart';
 import '../services/api_service.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -79,6 +80,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.black,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.account_circle_outlined, size: 28),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfileScreen()),
+              );
+            },
+          ),
+          const SizedBox(width: 10),
+        ],
       ),
       body: isLoading 
         ? const Center(child: CircularProgressIndicator())

@@ -9,6 +9,10 @@ class ApiService {
     token = newToken;
   }
 
+  static void logout() {
+    token = null;
+  }
+
   // Auth
   static Future<Map<String, dynamic>> login(String email, String password) async {
     final response = await http.post(
@@ -78,6 +82,30 @@ class ApiService {
   static Future<Map<String, dynamic>> addIncome(Map<String, dynamic> data) async {
     final response = await http.post(
       Uri.parse("$baseUrl/incomes/add"),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+      body: jsonEncode(data),
+    );
+    return jsonDecode(response.body);
+  }
+
+  // Profile
+  static Future<Map<String, dynamic>> getProfile() async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/user/profile"),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+    return jsonDecode(response.body);
+  }
+
+  static Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data) async {
+    final response = await http.put(
+      Uri.parse("$baseUrl/user/profile"),
       headers: {
         "Content-Type": "application/json",
         "Authorization": "Bearer $token",

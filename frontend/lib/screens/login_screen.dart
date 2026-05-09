@@ -38,14 +38,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       // Call API service
-      final result = await ApiService.loginUser(
-        email: emailController.text,
-        password: passwordController.text,
+      final result = await ApiService.login(
+        emailController.text,
+        passwordController.text,
       );
 
       if (!mounted) return;
 
-      if (result['success']) {
+      if (result['token'] != null) {
+        // Store token in ApiService
+        ApiService.setToken(result['token']);
+
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Login successful')));
@@ -55,16 +58,10 @@ class _LoginScreenState extends State<LoginScreen> {
           context,
           MaterialPageRoute(builder: (context) => const DashboardScreen()),
         );
-
-        // TODO: Store token
-        // String token = result['token'];
-        // SharedPreferences.getInstance().then((prefs) {
-        //   prefs.setString('token', token);
-        // });
       } else {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(result['message'])));
+        ).showSnackBar(SnackBar(content: Text(result['message'] ?? 'Login failed')));
         setState(() {
           isLoading = false;
         });
@@ -76,7 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
       });
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ).showSnackBar(SnackBar(content: Text('Error connecting to server')));
     }
   }
 

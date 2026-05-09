@@ -1,12 +1,12 @@
 const mongoose = require('mongoose');
 
-const userSchema = new mongoose.Schema({
+const expenseSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
     },
-    category:String,
+    category: String,
     amount: Number, 
     date: {
         type: Date, 
@@ -15,3 +15,5 @@ const userSchema = new mongoose.Schema({
      },
     description: String
 });
+
+module.exports = mongoose.model('Expense', expenseSchema);

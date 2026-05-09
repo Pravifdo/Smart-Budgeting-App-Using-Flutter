@@ -60,16 +60,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     try {
       // Call API service
-      final result = await ApiService.registerUser(
-        name: nameController.text,
-        email: emailController.text,
-        password: passwordController.text,
-        confirmPassword: confirmPasswordController.text,
+      final result = await ApiService.register(
+        nameController.text,
+        emailController.text,
+        passwordController.text,
+        confirmPasswordController.text,
       );
 
       if (!mounted) return;
 
-      if (result['success']) {
+      if (result['user'] != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Sign up successful! Please login.')),
         );
@@ -77,7 +77,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       } else {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(result['message'])));
+        ).showSnackBar(SnackBar(content: Text(result['message'] ?? 'Registration failed')));
         setState(() {
           isLoading = false;
         });
@@ -89,7 +89,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       });
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ).showSnackBar(const SnackBar(content: Text('Error connecting to server')));
     }
   }
 

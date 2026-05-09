@@ -48,11 +48,21 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             const SizedBox(height: 30),
             ElevatedButton(
               onPressed: () {
+                final String title = _titleController.text;
+                final double? amount = double.tryParse(_amountController.text);
+
+                if (title.isEmpty || amount == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please enter valid details')),
+                  );
+                  return;
+                }
+
                 // TODO: Save the expense to the backend or provider
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Expense Added Successfully!')),
-                );
-                Navigator.pop(context); // Go back to dashboard
+                Navigator.pop(context, {
+                  'title': title,
+                  'amount': amount,
+                }); // Go back to dashboard with data
               },
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),

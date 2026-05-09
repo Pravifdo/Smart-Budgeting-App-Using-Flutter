@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'add_expense_screen.dart';
+import 'add_income_screen.dart';
+import '../services/api_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -9,13 +11,64 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  // Mock Data - We can replace this with Backend/Provider data later
   final String userName = "Praveen";
-  double totalBalance = 45000.0;
-  double income = 50000.0;
-  double expense = 5000.0;
-    {"title": "Fuel", "amount": -3000.0},
-  ];
+  double totalBalance = 0.0;
+  double income = 0.0;
+  double expense = 0.0;
+  List<Map<String, dynamic>> recentTransactions = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+  }
+
+  Future<void> fetchData() async {
+    setState(() => isLoading = true);
+    try {
+      final expenses = await ApiService.getExpenses();
+      final incomes = await ApiService.getIncomes();
+
+      double totalExp = 0;
+      for (var item in expenses) {
+        totalExp += (item['amount'] as num).toDouble();
+      }
+
+      double totalInc = 0;
+      for (var item in incomes) {
+        totalInc += (item['amount'] as num).toDouble();
+      }
+
+      List<Map<String, dynamic>> allTxs = [];
+      for (var item in incomes) {
+        allTxs.add({
+          "title": item['source'] ?? "Income",
+          "amount": (item['amount'] as num).toDouble(),
+          "date": DateTime.parse(item['date']),
+        });
+      }
+      for (var item in expenses) {
+        allTxs.add({
+          "title": item['category'] ?? "Expense",
+          "amount": -(item['amount'] as num).toDouble(),
+          "date": DateTime.parse(item['date']),
+        });
+      }
+
+      allTxs.sort((a, b) => b['date'].compareTo(a['date']));
+
+      setState(() {
+        income = totalInc;
+        expense = totalExp;
+        totalBalance = totalInc - totalExp;
+        recentTransactions = allTxs;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() => isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +80,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.black,
       ),
-      body: SafeArea(
+      body: isLoading 
+        ? const Center(child: CircularProgressIndicator())
+        : SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
           child: Column(
@@ -56,7 +111,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   borderRadius: BorderRadius.circular(15),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.blueAccent.withOpacity(0.3),
+                      color: Colors.blueAccent.withValues(alpha: 0.3),
                       blurRadius: 10,
                       offset: const Offset(0, 5),
                     ),
@@ -91,12 +146,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     amount: income,
                     icon: Icons.arrow_downward,
                     color: Colors.green,
+                    onTap: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const AddIncomeScreen()),
+                      );
+
+                      if (result != null && result is Map<String, dynamic>) {
+                        await ApiService.addIncome({
+                          "source": result['title'],
+                          "amount": result['amount'],
+                        });
+                        fetchData(); // Refresh all data
+                      }
+                    },
                   ),
                   _buildIncomeExpenseCard(
                     title: "Expense",
                     amount: expense,
                     icon: Icons.arrow_upward,
                     color: Colors.red,
+                    onTap: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const AddExpenseScreen()),
+                      );
+
+                      if (result != null && result is Map<String, dynamic>) {
+                        await ApiService.addExpense({
+                          "category": result['title'],
+                          "amount": result['amount'],
+                          "description": result['title'],
+                        });
+                        fetchData(); // Refresh all data
+                      }
+                    },
                   ),
                 ],
               ),
@@ -115,6 +199,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   itemCount: recentTransactions.length,
                   itemBuilder: (context, index) {
                     final tx = recentTransactions[index];
+                    final bool isIncome = tx["amount"] > 0;
                     return Card(
                       margin: const EdgeInsets.only(bottom: 10),
                       elevation: 0,
@@ -125,10 +210,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: Colors.redAccent.withOpacity(0.1),
-                          child: const Icon(
-                            Icons.money_off,
-                            color: Colors.redAccent,
+                          backgroundColor: (isIncome ? Colors.green : Colors.red).withValues(alpha: 0.1),
+                          child: Icon(
+                            isIncome ? Icons.attach_money : Icons.money_off,
+                            color: isIncome ? Colors.green : Colors.red,
                           ),
                         ),
                         title: Text(
@@ -136,9 +221,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                         trailing: Text(
-                          "${tx["amount"]} Rs",
-                          style: const TextStyle(
-                            color: Colors.redAccent,
+                          "${tx["amount"].toStringAsFixed(0)} Rs",
+                          style: TextStyle(
+                            color: isIncome ? Colors.green : Colors.red,
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
@@ -163,15 +248,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
             );
 
             if (result != null && result is Map<String, dynamic>) {
-              setState(() {
-                // Update lists and totals
-                recentTransactions.insert(0, {
-                  "title": result['title'],
-                  "amount": -result['amount'],
-                });
-                expense += result['amount'];
-                totalBalance -= result['amount'];
+              await ApiService.addExpense({
+                "category": result['title'],
+                "amount": result['amount'],
+                "description": result['title'],
               });
+              fetchData();
             }
           },
           style: ElevatedButton.styleFrom(
@@ -200,9 +282,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required double amount,
     required IconData icon,
     required Color color,
+    VoidCallback? onTap,
   }) {
     return Expanded(
-      child: Container(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
         margin: EdgeInsets.only(
           right: title == "Income" ? 10 : 0,
           left: title == "Expense" ? 10 : 0,
@@ -214,7 +299,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           border: Border.all(color: Colors.grey.shade200),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.05),
+              color: Colors.grey.withValues(alpha: 0.05),
               spreadRadius: 1,
               blurRadius: 5,
               offset: const Offset(0, 2),
@@ -224,7 +309,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Row(
           children: [
             CircleAvatar(
-              backgroundColor: color.withOpacity(0.1),
+              backgroundColor: color.withValues(alpha: 0.1),
               radius: 18,
               child: Icon(icon, color: color, size: 20),
             ),
@@ -240,9 +325,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 5),
                   Text(
                     amount.toStringAsFixed(0),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
+                      color: color,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -251,6 +337,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );
